@@ -1,0 +1,96 @@
+\section{ploop}
+
+Для работы OpenVZ с файлами контейнера, существует два метода:
+\begin{itemize}
+    \item simfs (каталоги и файлы в файловой системе хост-компьютера);
+    \item ploop (отдельный файл для каждого контейнера).
+\end{itemize}
+
+simfs уже осталась в прошлом, в последнее время ее вытеснил ploop, который готов для использования в production\footnote{production "--- производственная <<боевая>> среда}.
+
+По умолчанию в OpenVZ используется ploop.
+Настраивается это в конфигурационном файле \texttt{/etc/vz/vz.conf}:
+\begin{lstlisting}
+# cat /etc/vz/vz.conf | grep VE_LAYOUT
+VE_LAYOUT=ploop
+\end{lstlisting}
+
+Основные преимущества ploop \cite{ploop}:
+\begin{itemize}
+%    \item Нет ограничения на индексные дескрипторы;
+    \item Поддержка корректной и надежной изоляции пользователей друг от друга;
+    \item Простое резервное копирование;
+    \item Журнал файловой системы больше не является узким местом;
+    \item Живая миграция;
+    \item Поддержка различных типов хранения данных.
+\end{itemize}
+
+В ploop игнорируются параметры \texttt{DISKQUOTA}, \texttt{DISKINODES}, \texttt{QUOTATIME}.
+Параметр \texttt{DISKSPACE} не игнорируется.
+
+Сами диски хранятся в каталоге \texttt{/vz/private} и имеют имя \texttt{root.hdd}:
+\begin{lstlisting}
+# ls -1 /vz/private/*/root.hdd/root.hdd
+/vz/private/101/root.hdd/root.hdd
+/vz/private/102/root.hdd/root.hdd
+/vz/private/103/root.hdd/root.hdd
+\end{lstlisting}
+
+\iffalse
+Существует скрипт для конвертации simfs в ploop. 
+Для его использования, на хост-компьютере должен быть установлен git\footnote{\texttt{yum install git}}.
+
+Работа со скриптом:
+\begin{lstlisting}
+# git clone https://github.com/FastVPSEestiOu/simfs_to_ploop/
+# cd simfs_to_ploop/
+\end{lstlisting}
+
+\begin{lstlisting}
+# perl fast_convert_to_ploop.pl
+Process CT 104
+CT inodes 104 used 14831 max: 144179
+CT bytes 104 used 249520 max: 1153433
+We should stop 104 container (current status: running)
+Start ploop conversion for: 104
+Creating image: /vz/private/104.ploop/root.hdd/root.hdd size=1153433K
+Creating delta /vz/private/104.ploop/root.hdd/root.hdd bs=2048 size=4614144 sectors v2
+...
+\end{lstlisting}
+
+Скрипт автоматически находит все контейнеры, использующие simfs, останавливает их, конвертирует в ploop и запускает.
+Для конвертации используется команда \texttt{vzctl convert}.
+\fi
+
+Можно быстро изменять размер ploop-диска, не отключая при этом контейнер.
+Просмотрим размеры ploop-дисков (1G):
+\begin{lstlisting}
+# vzlist -o smart_name,diskspace.h
+ SMARTNAME   DSPACE.H
+       101    1113684
+       102    1113684
+       103    1113684
+       104    1113684
+\end{lstlisting} 
+
+Изменим размер диска контейнера 103 на 2G:
+\begin{lstlisting}
+# vzctl set 103 --diskspace 2G --save
+dumpe2fs 1.41.12 (17-May-2010)
+Changing balloon size old_size=1182793728 new_size=217055232
+Successfully truncated balloon from 1182793728 to 217055232 bytes
+UB limits were set successfully
+CT configuration saved to /etc/vz/conf/103.conf
+\end{lstlisting}
+\begin{lstlisting}
+# vzlist -o smart_name,diskspace.h
+ SMARTNAME   DSPACE.H
+       101    1113684
+       102    1113684
+       103    2056788
+       104    1113684
+\end{lstlisting} 
+
+За подробной информацией о ploop можно обратиться по адресу: \url{https://openvz.org/Ploop/Getting_started}
+
+\clearpage

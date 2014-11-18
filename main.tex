@@ -1,0 +1,37 @@
+%!TEX TS-program = pdflatex
+
+% Author: Amet Umerov (admin@amet13.name)
+
+\documentclass[a4paper,12pt]{article}
+\input{inc/preamble} % Подключаем преамбулу
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\thispagestyle{empty}
+\input{inc/title} % Титул
+
+\thispagestyle{empty}
+\tableofcontents % Содержание
+\clearpage
+
+\input{inc/intro}
+\input{inc/10-prepareos}
+\input{inc/20-createvps}
+\input{inc/30-controlres}
+\input{inc/40-vpn}
+\input{inc/50-backups}
+\input{inc/60-ploop}
+\input{inc/70-openvzwebpanel}
+\input{inc/80-recommend}
+
+\printbibliography % Список литературы
+\addcontentsline{toc}{section}{\protect\numberline{}Список литературы}
+\thispagestyle{empty}
+\clearpage
+
+\appendix % Приложения
+\input{inc/a-appendix}
+
+\end{document}

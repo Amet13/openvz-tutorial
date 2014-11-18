@@ -1,0 +1,107 @@
+%%% Преамбула %%%
+
+%%% Поля и разметка страницы %%%
+\usepackage{lscape}		% Для включения альбомных страниц
+
+%%% Кодировки и шрифты %%%
+\usepackage{cmap}						% Улучшенный поиск русских слов в полученном pdf-файле
+\usepackage[T2A]{fontenc}				% Поддержка русских букв
+\usepackage[utf8]{inputenc}				% Кодировка utf8
+\usepackage[english, russian]{babel}	% Языки: русский, английский
+\usepackage{pscyr}						% Красивые русские шрифты
+
+%%% Математические пакеты %%%
+\usepackage{amsthm,amsfonts,amsmath,amssymb,amscd} % Математические дополнения от AMS
+
+%%% Оформление абзацев %%%
+\usepackage{indentfirst} % Красная строка
+
+%%% Цвета %%%
+\usepackage[usenames]{color}
+\usepackage{color}
+\usepackage{colortbl}
+
+%%% Таблицы %%%
+\usepackage{longtable}					% Длинные таблицы
+\usepackage{multirow,makecell,array}	% Улучшенное форматирование таблиц
+
+%%% Общее форматирование
+\usepackage[singlelinecheck=off,center]{caption}	% Многострочные подписи
+\usepackage{soul}									% Поддержка переносоустойчивых подчеркиваний и зачеркиваний
+
+%%% Библиография %%%
+%\usepackage{cite} % Красивые ссылки на литературу
+
+%%% Гиперссылки %%%
+\usepackage[plainpages=false,pdfpagelabels=false]{hyperref}
+\definecolor{linkcolor}{rgb}{0.9,0,0}
+\definecolor{citecolor}{rgb}{0,0.6,0}
+\definecolor{urlcolor}{rgb}{0,0,1}
+\hypersetup{
+    colorlinks, linkcolor={linkcolor},
+    citecolor={citecolor}, urlcolor={urlcolor},
+    pdfauthor={Amet Umerov},
+    pdftitle={OpenVZ Tutorial},
+}
+
+%%% Изображения %%%
+\usepackage[dvipdfm]{graphicx}		% Подключаем пакет работы с графикой
+\graphicspath{{images/}{images/centos/}}	% Пути к изображениям
+
+%%% Выравнивание и переносы %%%
+\sloppy					% Избавляемся от переполнений
+\clubpenalty=10000		% Запрещаем разрыв страницы после первой строки абзаца
+\widowpenalty=10000		% Запрещаем разрыв страницы после последней строки абзаца
+
+%%% Библиография %%%
+\makeatletter
+\bibliographystyle{utf8gost705u}	% Оформляем библиографию в соответствии с ГОСТ 7.0.5
+\renewcommand{\@biblabel}[1]{#1.}	% Заменяем библиографию с квадратных скобок на точку:
+\makeatother
+
+%%% Колонтитулы %%%
+\usepackage{fancyhdr}
+ 	\pagestyle{fancy}
+ 	\fancyhead[L]{\thepage} % Нумерация страниц в левом верхнем углу
+	
+\let\Sectionmark\sectionmark
+\def\sectionmark#1{\def\Sectionname{#1}\Sectionmark{#1}}
+\makeatletter
+\newcommand*{\currentname}{\@currentlabelname}
+\renewcommand{\@oddhead}{\it \vbox{\hbox to \textwidth%
+    {\rm{\thepage \hfil \thesection.~\Sectionname}\strut}\hrule}}
+\makeatother
+    \fancyhf{} % Очистка текущих значений номеров страниц
+
+%%% Библиография %%%
+\usepackage[backend=biber,bibencoding=utf8,sorting=none]{biblatex}
+\usepackage{csquotes}
+\bibliography{inc/bib1.bib}
+
+%%% Подсветка кода %%%
+\usepackage{color}
+\usepackage{listings}
+
+\definecolor{backcolor}{rgb}{0.95,0.95,0.95}
+
+\lstset{
+  columns=fixed,					% Делаем моноширинный шрифт
+  backgroundcolor=\color{backcolor},% Цвет фона, нужно подключить пакет color или xcolor  
+  basicstyle=\small\ttfamily,		% Размер и начертание  
+  breakatwhitespace=false,			% Переносим строки только при наличии пробела  
+  breaklines=true,					% Автоматически переносим строки    
+  commentstyle=\color{black},	    % Стиль для комментариев   
+  extendedchars=true,				% Позволяем использовать не-ASCII символы  
+  keywordstyle=\color{black},		% Стиль для ключевых слов 
+  language=bash,					% Язык программирования  
+  morekeywords={*,...},				% Пользовательские ключевые слова  
+  showspaces=false,					% Показывать ли пробелы с помощью специальных отступов  
+  showstringspaces=false,			% Показывать ли пробелы в строках  
+  showtabs=false,					% Показывать ли знаки табуляции
+  stepnumber=1,						% Размер шага между номерами строк
+  tabsize=2						    % Размер табуляции
+}
+
+%%% Счетчик номера сноски на каждой странице сбрасывается %%%
+\usepackage{perpage}
+\MakePerPage{footnote}

@@ -1,0 +1,386 @@
+\section{Создание и настройка нового сервера VPS}
+\subsection{Проверка сети и дискового пространства}
+
+После загрузки в \texttt{vzkernel}, первым делом необходимо проверить настройки сети:
+\begin{lstlisting}
+# ifconfig | grep "eth\|lo\|venet" -A 1
+eth0      Link encap:Ethernet  HWaddr 08:00:27:14:41:DE  
+          inet addr:192.168.0.100  Bcast:192.168.0.255  Mask:255.255.255.0
+--
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+--
+venet0    Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  
+          inet6 addr: fe80::1/128 Scope:Link
+\end{lstlisting}
+
+Должно быть доступно три сетевых интерфейса:
+\begin{itemize}
+    \item \texttt{eth0 (192.168.0.100)} "--- интерфейс реальной сетевой карты;
+    \item \texttt{lo (127.0.0.1)} "--- виртуальный интерфейс локальная <<петля>>;
+    \item \texttt{venet0} "--- виртуальный сетевой интерфейс для OpenVZ.
+\end{itemize}
+
+Проверим свободное место на диске:
+\begin{lstlisting}
+# df -h | grep vz
+/dev/sda2        32G  1.1G   30G   4% /vz
+\end{lstlisting}
+
+По этому примеру видно, что всего доступно 32G дискового пространства на разделе \texttt{/vz}, из них занято 1.1G, скачанными ранее шаблонами ОС.
+С учетом того, что на один контейнер будем тратить не более 1G дискового пространства, то 30G должно хватить.
+
+\subsection{Идентификаторы контейнеров}
+При создании, каждый контейнер имеет идентификатор (CTID)\footnote{CTID "--- ConTainer IDentificator}:
+\begin{itemize}
+    \item CTID с номером 0 "--- это хост-компьютер;
+    \item CTID от 1 до 100 резервируются OpenVZ для внутренних нужд.
+\end{itemize}
+
+CTID должен быть уникальным для каждого контейнера.
+Хорошей практикой является создание контейнера с CTID от 101 до 999.
+
+Существует также схема присвоения идентификаторов по IP адресам.
+Например, для адреса \texttt{10.0.2.1}, CTID = 102, для \texttt{192.168.123.33}, CTID = 33123 и~т.~д. \cite{virtuozzolinux}
+
+\subsection{Просмотр списка контейнеров и шаблоны}
+Посмотрим список созданных контейнеров.
+Так как, пока VPS не созданы, то можно увидеть такое:
+\begin{lstlisting}
+# vzlist -a
+      CTID      NPROC STATUS    IP_ADDR         HOSTNAME 
+\end{lstlisting}
+
+Для создания контейнера нужно использовать один из ранее скачанных шаблонов.
+Проверим, какие шаблоны доступны на хост-компьютере:
+\begin{lstlisting}
+# vztmpl-dl --list-local
+centos-6-x86_64-minimal
+centos-7-x86_64-minimal
+debian-7.0-x86_64-minimal
+suse-13.1-x86_64-minimal
+ubuntu-14.04-x86_64-minimal
+\end{lstlisting}
+
+\subsection{Конфигурационные файлы}
+Каждый контейнер имеет свой конфигурационный файл (далее <<конфиг>>), который хранится в каталоге \texttt{/etc/sysconfig/vz-scripts/}.
+
+Именуются конфиги по CTID контейнера.
+Например, для контейнера с CTID = 101, конфиг будет называться \texttt{101.conf}.
+
+При создании контейнера можно использовать типовую конфигурацию для VPS.
+Типовые файлы конфигураций находятся в том же каталоге \texttt{/etc/sysconfig/vz-scripts/}:
+\begin{lstlisting}
+# ls -1 /etc/sysconfig/vz-scripts/ | grep sample
+ve-basic.conf-sample
+ve-custom.conf-sample
+ve-light.conf-sample
+ve-vswap-1024m.conf-sample
+ve-vswap-1g.conf-sample
+ve-vswap-256m.conf-sample
+ve-vswap-2g.conf-sample
+ve-vswap-4g.conf-sample
+ve-vswap-512m.conf-sample
+\end{lstlisting}
+
+В этих конфигурационных файлах описаны контрольные параметры ресурсов, выделенное дисковое пространство, оперативная память и~т.~д.
+
+Например, при использовании конфига \texttt{ve-vswap-1g}, создается VPS с дисковым пространством 2G, оперативной памятью 1G и swap 2G.
+Это удобно, так как существует возможность создавать свои конфигурационные файлы для различных вараиций VPS.
+
+Cоздадим свой конфигурационный файл, на базе уже существующего (\texttt{vswap-256m}).
+Исправим в нем только значения \texttt{DISKSPACE}, \texttt{PHYSPAGES} и \texttt{SWAPPAGES}:
+\begin{lstlisting}
+# cp /etc/vz/conf/ve-vswap-256m.conf-sample /etc/vz/conf/ve-custom.conf-sample
+# vim /etc/vz/conf/ve-custom.conf-sample
+DISKSPACE="1G:1.1G"
+PHYSPAGES="0:128M"
+SWAPPAGES="0:128M"
+\end{lstlisting}
+
+Таким образом, при использовании этого конфигурационного файла будет создаваться контейнер, которому будет доступен 1G выделенного дискового пространства, 128M оперативной памяти и 128M swap.
+
+В дальнейшем, при создании контейнеров будем использовать конфигурационный файл \texttt{custom}.
+
+\subsection{Создание и настройка контейнера}
+Для создания контейнера необходимо ввести команду:
+\begin{lstlisting}
+# vzctl create 101 --ostemplate debian-7.0-x86_64-minimal --config custom
+\end{lstlisting}
+где:
+\begin{itemize}
+    \item \texttt{101} "--- CTID контейнера;
+    \item \texttt{debian-7.0-x86\_64-minimal} "--- шаблон ОС;
+    \item \texttt{custom} "--- желаемый шаблон конфигурационного файла.
+\end{itemize}
+
+После нажатия клавиши \texttt{Enter} начинается процесс создания VPS. 
+По времени процедура может занимать несколько десятков секунд.
+
+Проверим правильность создания VPS:
+\begin{lstlisting}
+# vzlist -a
+      CTID      NPROC STATUS    IP_ADDR         HOSTNAME
+       101          - stopped   -               -
+\end{lstlisting}
+
+Можно увидеть, что создан контейнер с CTID = 101, сейчас он не включен.
+
+Если же при создании контейнера не указывать желаемый шаблон и файл конфигурации, то OpenVZ будет использовать шаблон и конфигурационный файл по умолчанию.
+Конфиг, в котором указаны директивы по умолчанию имеет имя: \texttt{/etc/sysconfig/vz}.
+По умолчанию, используется шаблон \texttt{centos-6-x86} и конфигурационный файл \texttt{vswap-256m}.
+
+Так как планируется создание небольшого количества VPS, основываясь на одном и том же конфиге, то исправим\footnote{В файле \texttt{/etc/sysconfig/vz} (и многих других) с символа \texttt{\#} начинается комментарий} эти значения на нужные:
+\begin{lstlisting}
+# vim /etc/sysconfig/vz
+#CONFIGFILE="vswap-256m"
+CONFIGFILE="custom"
+#DEF_OSTEMPLATE="centos-6-x86"
+DEF_OSTEMPLATE="debian-7.0-x86_64-minimal"
+\end{lstlisting}
+
+Теперь, при создании VPS достаточно указать только CTID контейнера, например:
+\begin{lstlisting}
+# vzctl create 101
+\end{lstlisting}
+
+Будет создан контейнер на базе \texttt{debian-7.0x86\_64-minimal}, значения системных параметров будут взяты с конфига \texttt{custom}.
+
+Контейнер создан, его можно запускать.
+Но перед первым запуском необходимо установить его IP адрес, hostname, указать DNS сервер и задать пароль суперпользователя.
+
+%\subsection{Настройка контейнера}
+Для настройки VPS используется команда \texttt{vzctl set}.
+
+Для того, чтобы контейнер запускался при старте хост-компьютера (например после перезагрузки), необходимо использовать команду:
+\begin{lstlisting}
+# vzctl set 101 --onboot yes --save
+CT configuration saved to /etc/vz/conf/101.conf
+\end{lstlisting}
+
+При использовании ключа \texttt{-{}-save} в \texttt{vzctl set}, сохраняются параметры контейнера в соответствующий конфигурационный файл.
+
+Аналогично можно задать hostname:
+\begin{lstlisting}
+# vzctl set 101 --hostname stud1 --save
+CT configuration saved to /etc/vz/conf/101.conf
+\end{lstlisting}
+
+Установка IP адреса:
+\begin{lstlisting}
+# vzctl set 101 --ipadd 192.168.0.101 --save
+CT configuration saved to /etc/vz/conf/101.conf
+\end{lstlisting}
+
+Адрес DNS сервера (в большинстве случаев\footnote{Если же нужно явно указать адрес DNS сервера, то вместо \texttt{inherit} можно указать IP адрес, например \texttt{192.168.0.1}} адрес DNS совпадает с адресом хост-компьютера, поэтому можно вместо адреса указать параметр \texttt{inherit}):
+\begin{lstlisting}
+# vzctl set 101 --nameserver inherit --save
+CT configuration saved to /etc/vz/conf/101.conf
+\end{lstlisting}
+
+Установка пароля суперпользователя:
+\begin{lstlisting}
+# vzctl set 101 --userpasswd root:p@ssw0rd
+Starting container...
+Opening delta /vz/private/101/root.hdd/root.hdd
+Adding delta dev=/dev/ploop37965 img=/vz/private/101/root.hdd/root.hdd (rw)
+Mounting /dev/ploop37965p1 at /vz/root/101 fstype=ext4 data='balloon_ino=12,' 
+Container is mounted
+Container start in progress...
+Killing container ...
+Container was stopped
+Unmounting file system at /vz/root/101
+Unmounting device /dev/ploop37965
+Container is unmounted
+\end{lstlisting}
+
+Пароль будет установлен в VPS, в файл \texttt{/etc/shadow} и не будет сохранен в конфигурационный файл контейнера.
+Если же пароль будет утерян или забыт, то можно будет просто задать новый.
+
+\subsection{Запуск и вход}
+После настроек нового контейнера, его можно запустить:
+\begin{lstlisting}
+# vzctl start 101
+Starting container...
+Opening delta /vz/private/101/root.hdd/root.hdd
+Adding delta dev=/dev/ploop37965 img=/vz/private/101/root.hdd/root.hdd (rw)
+Mounting /dev/ploop37965p1 at /vz/root/101 fstype=ext4 data='balloon_ino=12,' 
+Container is mounted
+Adding IP address(es): 192.168.0.101
+Setting CPU units: 1000
+Container start in progress...
+\end{lstlisting}
+
+Для того, чтобы выполнить команду внутри контейнера существует команда \texttt{vzctl exec}.
+Подробнее об этой команде позже.
+
+Проверяем сетевые интерфейсы внутри гостевой ОС:
+\begin{lstlisting}
+# vzctl exec 101 ifconfig | grep "lo\|venet" -A 1
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+--
+venet0    Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  
+          inet addr:127.0.0.2  P-t-P:127.0.0.2  Bcast:0.0.0.0  Mask:255.255.255.255
+--
+venet0:0  Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  
+          inet addr:192.168.0.101  P-t-P:192.168.0.101  Bcast:192.168.0.101  Mask:255.255.255.255
+
+\end{lstlisting}
+
+Должны присутствовать сетевые интерфейсы:
+\begin{itemize}
+    \item \texttt{lo (127.0.0.1)};
+    \item \texttt{venet0 (127.0.0.2)};
+    \item \texttt{venet0:0 (192.168.0.101)}.
+\end{itemize}
+
+Если сеть в порядке, то можно соединиться к контейнеру по SSH с хост-компьютера:
+\begin{lstlisting}
+# ssh root@192.168.0.101
+root@192.168.0.101's password: p@ssw0rd
+\end{lstlisting}
+
+Вход в контейнер напрямую с хост-компьютера осуществляется командой \texttt{vzctl enter}:
+\begin{lstlisting}
+# vzctl enter 101
+entered into CT 101
+root@stud1:/# 
+\end{lstlisting}
+
+Выход из контейнера:
+\begin{lstlisting}
+root@stud1:/#  exit
+logout
+exited from CT 101
+\end{lstlisting}
+
+\subsection{Статус VPS}
+Для того, чтобы узнать статус контейнера, используется команда:
+\begin{lstlisting}
+# vzctl status 101
+CTID 101 exist mounted running
+\end{lstlisting}
+
+По выводу команды можно видеть, что контейнер с CTID = 101 существует, смонтирован и запущен.
+
+Команда \texttt{vzlist -a} выводит список всех существующих в системе контейнеров.
+Рассмотрим подробно вывод команды \texttt{vzlist -a}:
+\begin{lstlisting}
+# vzlist -a
+      CTID      NPROC STATUS    IP_ADDR         HOSTNAME
+       101         15 running   192.168.0.101   stud1
+       102          - stopped   192.168.0.102   stud2
+\end{lstlisting}
+где:
+\begin{itemize}
+    \item \texttt{CTID} "--- ID контейнера;
+    \item \texttt{NPROC} "--- число запущенных процессов в контейнере;
+    \item \texttt{STATUS} "--- состояние контейнера (запущен/не запущен);
+    \item \texttt{IP\_ADDR} "--- IP адрес;
+    \item \texttt{HOSTNAME} "--- имя контейнера.
+\end{itemize}
+
+\subsection{Остановка, перезапуск и удаление контейнера}
+Для остановки контейнера используется команда:
+\begin{lstlisting}
+# vzctl stop 101
+\end{lstlisting}
+
+Для полной остановки контейнера, системе требуется немного времени (примерно 2 минуты).
+
+Иногда нужно выключить VPS как можно быстрее, например, если контейнер был подвержен взлому.
+Для того чтобы срочно выключить VPS, нужно использовать ключ \texttt{-{}-fast}:
+\begin{lstlisting}
+# vzctl stop 101 --fast
+Killing container ...
+Container was stopped
+Unmounting file system at /vz/root/101
+Unmounting device /dev/ploop37965
+Container is unmounted
+\end{lstlisting}
+
+Для перезапуска контейнера можно использовать команду:
+\begin{lstlisting}
+# vzctl restart 101
+Restarting container
+Stopping container ...
+Container was stopped
+Unmounting file system at /vz/root/101
+Unmounting device /dev/ploop37965
+Container is unmounted
+Starting container...
+Opening delta /vz/private/101/root.hdd/root.hdd
+Adding delta dev=/dev/ploop37965 img=/vz/private/101/root.hdd/root.hdd (rw)
+Mounting /dev/ploop37965p1 at /vz/root/101 fstype=ext4 data='balloon_ino=12,' 
+Container is mounted
+Adding IP address(es): 192.168.0.101
+Setting CPU units: 1000
+Container start in progress...
+\end{lstlisting}
+
+А для того, чтобы удалить контейнер, его нужно сначала остановить:
+\begin{lstlisting}
+# vzctl stop 101
+Stopping container ...
+Container was stopped
+Unmounting file system at /vz/root/101
+Unmounting device /dev/ploop37965
+Container is unmounted
+\end{lstlisting}
+
+Для удаления используется команда:
+\begin{lstlisting}
+# vzctl destroy 101
+CTID 101 deleted unmounted down
+\end{lstlisting}
+
+Команда выполняет удаление частной области сервера и переименовывает файл конфигурации, дописывая к нему \texttt{.destroyed}\footnote{Например, после удаления контейнера с CTID = 101, конфиг стал называться \texttt{/etc/vz/conf/101.conf.destroyed}}.
+
+\subsection{Запуск команд}
+Как уже было сказано выше, для запуска команд в контейнере используется команда:
+\begin{lstlisting}
+# vzctl exec 101 command
+\end{lstlisting}
+
+Например, для того, чтобы соединиться к VPS по SSH\footnote{SSH позволяет безопасно передавать в незащищенной среде практически любой сетевой протокол. Таким образом, можно не только удаленно работать на компьютере через командную оболочку, но и передавать по шифрованному каналу звуковой поток или видео. Также SSH может использовать сжатие передаваемых данных для последующего их шифрования}, нужно сначала включить SSH:
+\begin{lstlisting}
+# vzctl exec 101 service ssh start
+Starting OpenBSD Secure Shell server: sshd.
+\end{lstlisting}
+
+Теперь можно соединиться к контейнеру по SSH:
+\begin{lstlisting}
+# ssh root@192.168.0.101
+root@192.168.0.101's password: p@ssw0rd
+root@stud1:/# 
+\end{lstlisting}
+
+Иногда бывает нужно выполнить команду на нескольких VPS.
+Для этого можно использовать команду:
+\begin{lstlisting}
+# for i in `vzlist -o veid -H`; do \
+> echo "VPS $i"; vzctl exec $i command; done
+\end{lstlisting}
+
+Например, можно узнать, сколько времени работают все запущенные контейнеры:
+\begin{lstlisting}
+# for i in `vzlist -o veid -H`; do \
+> echo "VPS $i"; vzctl exec $i uptime; done
+VPS 101
+ 05:45:01 up 2 min, 0 users, load average: 0.01, 0.02, 0.03
+VPS 102
+ 05:46:01 up 1 min, 0 users, load average: 0.04, 0.05, 0.06
+\end{lstlisting}
+
+Или узнать системную информацию о дистрибутивах в контейнерах:
+\begin{lstlisting}
+# for i in `vzlist -o veid -H`; do \
+> echo "VPS $i"; vzctl exec $i uname -rv; done
+VPS 101
+2.6.32-042stab093.5 #1 SMP Wed Jan 01 12:12:12 MSK 2014
+VPS 102
+2.6.32-042stab093.5 #1 SMP Wed Jan 01 12:12:12 MSK 2014
+\end{lstlisting}
+
+\clearpage

@@ -1,0 +1,126 @@
+\section{Резервное копирование и восстановление}
+
+Утилитами \texttt{vzdump} и \texttt{vzrestore} можно осуществлять резервное копирование и восстановление контейнеров.
+
+Установка \texttt{vzdump} и необходимых зависимостей:
+\begin{lstlisting}
+# yum install cstream perl-LockFile-Simple
+# rpm -ivh "http://ftp.openvz.org/contrib/utils/vzdump/vzdump-1.2-4.noarch.rpm"
+Retrieving http://ftp.openvz.org/contrib/utils/vzdump/vzdump-1.2-4.noarch.rpm
+Preparing...   ##################################### [100%]
+   1:vzdump    ##################################### [100%]
+\end{lstlisting}
+
+\subsection{Резервная копия контейнера}
+Резервная копия контейнера создается командой:
+\begin{lstlisting}
+# vzdump 101
+\end{lstlisting}
+где 101 "--- CTID контейнера.
+
+По умолчанию, копия VPS сохраняется в каталоге \texttt{/vz/dump/}. Размер копии из примера равен 281M:
+\begin{lstlisting}
+# ls -lh /vz/dump/vzdump-openvz-*.tar 
+-rw-r--r-- 1 root root 281M Nov  1 14:02 /vz/dump/vzdump-openvz-101-2014_01_01-12_12_12.tar
+\end{lstlisting}
+
+У \texttt{vzdump} есть много параметров, позволяющих осуществлять гибкое резервное копирование\footnote{Подробнее о параметрах можно узнать в \texttt{man vzdump}}.
+
+Создадим резервную копию того же контейнера (CTID = 101), но с использованием дополнительных параметров:
+\begin{lstlisting}
+# vzdump --suspend --compress --dumpdir /root/ --exclude-path /tmp/ 101
+INFO: starting new backup job: vzdump --suspend --compress --dumpdir /root/ --exclude-path /tmp/ 101
+INFO: Starting Backup of VM 101 (openvz)
+INFO: CTID 101 exist mounted running
+INFO: status = CTID 101 exist mounted running
+...
+INFO: archive file size: 85MB
+INFO: Finished Backup of VM 101 (00:00:52)
+INFO: Backup job finished successfuly
+\end{lstlisting}
+где:
+\begin{itemize}
+    \item \texttt{-{}-suspend} "--- приостановить контейнер;
+    \item \texttt{-{}-compress} "--- сжимать архив в формате \texttt{.tgz};
+    \item \texttt{-{}-dumpdir} "--- сохранить архив в указанный следующим параметром каталог;
+    \item \texttt{-{}-exclude-path}\footnote{В версии \texttt{vzdump-1.2-4} частично не работает параметр \texttt{-{}-exclude-path}} "--- исключить, указанный следующим параметром каталог, из резервной копии.
+\end{itemize}
+
+Можно заметить, что в сжатом виде архив весит меньше (86M):
+\begin{lstlisting}
+# ls -lh /root/vzdump-openvz-101-2014_01_01-12_12_13.tgz
+-rw-r--r-- 1 root root 86M Nov  1 14:25 /root/vzdump-openvz-101-2014_01_01-12_12_13.tgz
+\end{lstlisting}
+
+Результат операции резервного копирования можно просмотреть в лог-файле, который находится в том же каталоге, что и архив:
+\begin{lstlisting}
+# tail -4 /root/vzdump-openvz-101-2014_01_01-12_12_13.log
+Nov 01 14:25:23 INFO: tar: Exiting with failure status due to previous errors
+Nov 01 14:25:23 INFO: archive file size: 85MB
+Nov 01 14:25:23 INFO: delete old backup '/root/vzdump-openvz-101-2014_01_01-12_12_13.tgz'
+Nov 01 14:25:23 INFO: Finished Backup of VM 101 (00:00:52)
+\end{lstlisting}
+
+Чтобы скопировать полученный архив на удаленный сервер по безопасному SSH-соединению, можно воспользоваться утилитой \texttt{scp}:
+\begin{lstlisting}
+# scp /root/vzdump-openvz-101-2014_01_01-12_12_13.tgz root@backupserver:/backups
+root@backupserver's password: b@ckupp@$$wd
+vzdump-openvz-101-2014_01_01-12_12_13.tgz  100%  86MB  17.1MB/s  00:05 
+\end{lstlisting}
+
+На удаленном сервере можно проверить, скопировался ли архив:
+\begin{lstlisting}
+root@backupserver:/# ls -lh /backups/
+total 86M
+-rw-r--r-- 1 root root 86M Nov  1 08:00 vzdump-openvz-101-2014_01_01-12_12_13.tgz
+\end{lstlisting}
+
+\subsection{Восстановление контейнера из резервной копии}
+Командой \texttt{vzrestore} можно восстановить контейнер с архива. 
+\texttt{vzrestore} принимает всего 2 параметра: файл архива и CTID контейнера, в который будет разворачиваться архив.
+
+Создадим контейнер с CTID = 103, содержащий резервную копию контейнера с CTID = 101:
+\begin{lstlisting}
+# vzrestore /vz/dump/vzdump-openvz-101-2014_01_01-12_12_12.tar 103
+INFO: restore openvz backup '/vz/dump/vzdump-openvz-101-2014_01_01-12_12_12.tar' using ID 103
+INFO: extracting archive 'vzdump-openvz-101-2014_01_01-12_12_12.tar'
+INFO: Total bytes read: 86611520 (86MiB, 26MiB/s)
+INFO: extracting configuration to '/etc/vz/conf/103.conf'
+INFO: restore openvz backup '/vz/dump/vzdump-openvz-101-2014_01_01-12_12_12.tar' successful
+\end{lstlisting}
+
+Проверяем новый контейнер:
+\begin{lstlisting}
+# vzlist 103
+      CTID      NPROC STATUS    IP_ADDR         HOSTNAME
+       103          - stopped   192.168.0.101   stud1
+\end{lstlisting}
+
+Зададим параметры для нового контейнера:
+\begin{lstlisting}
+# vzctl set 103 --hostname stud3 --save
+CT configuration saved to /etc/vz/conf/103.conf
+\end{lstlisting}
+\begin{lstlisting}
+# vzctl set 103 --ipdel 192.168.0.101 --save
+CT configuration saved to /etc/vz/conf/103.conf
+\end{lstlisting}
+\begin{lstlisting}
+# vzctl set 103 --ipadd 192.168.0.103 --save
+CT configuration saved to /etc/vz/conf/103.conf
+\end{lstlisting}
+
+\begin{lstlisting}
+# vzctl start 103
+Starting container...
+Opening delta /vz/private/103/root.hdd/root.hdd
+Adding delta dev=/dev/ploop12539 img=/vz/private/103/root.hdd/root.hdd (rw)
+Mounting /dev/ploop12539p1 at /vz/root/103 fstype=ext4 data='balloon_ino=12,' 
+Container is mounted
+Adding IP address(es): 192.168.0.103
+Setting CPU units: 1000
+Setting devices
+Container start in progress...
+\end{lstlisting}
+
+\clearpage
