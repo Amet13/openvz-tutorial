@@ -58,9 +58,9 @@ latex/
 
 Благодарности
 -------------
-Павлу Одинцову (https://github.com/pavel-odintsov)
+[Павлу Одинцову]
 
-[blog]:http://blog.amet13.name/2014/06/latex.html
+[Павлу Одинцову]:https://github.com/pavel-odintsov
 [LaTeXila]:https://wiki.gnome.org/Apps/LaTeXila
 [отсюда]:https://github.com/Amet13/Russian-Phd-LaTeX-Dissertation-Template/tree/master/Draft
 [The GNU General Public License, Version 2, June 1991 (GPLv2)]:https://github.com/Amet13/openvz-tutorial/blob/master/LICENSE
