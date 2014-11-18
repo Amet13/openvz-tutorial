@@ -28,6 +28,8 @@ VE_LAYOUT=ploop
 В ploop игнорируются параметры \texttt{DISKQUOTA}, \texttt{DISKINODES}, \texttt{QUOTATIME}.
 Параметр \texttt{DISKSPACE} не игнорируется.
 
+ploop может работать только с файловой системой ext4.
+
 Сами диски хранятся в каталоге \texttt{/vz/private} и имеют имя \texttt{root.hdd}:
 \begin{lstlisting}
 # ls -1 /vz/private/*/root.hdd/root.hdd
@@ -35,32 +37,6 @@ VE_LAYOUT=ploop
 /vz/private/102/root.hdd/root.hdd
 /vz/private/103/root.hdd/root.hdd
 \end{lstlisting}
-
-\iffalse
-Существует скрипт для конвертации simfs в ploop. 
-Для его использования, на хост-компьютере должен быть установлен git\footnote{\texttt{yum install git}}.
-
-Работа со скриптом:
-\begin{lstlisting}
-# git clone https://github.com/FastVPSEestiOu/simfs_to_ploop/
-# cd simfs_to_ploop/
-\end{lstlisting}
-
-\begin{lstlisting}
-# perl fast_convert_to_ploop.pl
-Process CT 104
-CT inodes 104 used 14831 max: 144179
-CT bytes 104 used 249520 max: 1153433
-We should stop 104 container (current status: running)
-Start ploop conversion for: 104
-Creating image: /vz/private/104.ploop/root.hdd/root.hdd size=1153433K
-Creating delta /vz/private/104.ploop/root.hdd/root.hdd bs=2048 size=4614144 sectors v2
-...
-\end{lstlisting}
-
-Скрипт автоматически находит все контейнеры, использующие simfs, останавливает их, конвертирует в ploop и запускает.
-Для конвертации используется команда \texttt{vzctl convert}.
-\fi
 
 Можно быстро изменять размер ploop-диска, не отключая при этом контейнер.
 Просмотрим размеры ploop-дисков (1G):
