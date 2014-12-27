@@ -1,10 +1,10 @@
-\section{VPN в контейнере}
+\section{VPN и IPTables в контейнере}
 
 Технология VPN\footnote{VPN (англ. Virtual Private Network) "--- обобщенное название технологий, позволяющих обеспечить одно или несколько сетевых соединений поверх другой сети (например, Интернет)} позволяет устанавливать безопасное сетевое соединение между компьютерами.
 Для того чтобы VPN работала в контейнере, необходимо разрешить использование TUN/TAP устройств для контейнера.
 \begin{figure}[ht]
     \centering
-	\includegraphics[width=\linewidth]{vpn.pdf}
+	\includegraphics[width=0.8\linewidth]{vpn.pdf}
 	\caption{Схема работы VPN}\label{pic:vpn}
 \end{figure}
 
@@ -40,13 +40,7 @@ CT configuration saved to /etc/vz/conf/101.conf
 \begin{lstlisting}
 # vzctl start 101
 Starting container...
-Opening delta /vz/private/101/root.hdd/root.hdd
-Adding delta dev=/dev/ploop17343 img=/vz/private/101/root.hdd/root.hdd (rw)
-Mounting /dev/ploop17343p1 at /vz/root/101 fstype=ext4 data='balloon_ino=12,' 
-Container is mounted
-Adding IP address(es): 192.168.0.101
-Setting CPU units: 1000
-Setting devices
+...
 Container start in progress...
 \end{lstlisting}
 
@@ -67,5 +61,18 @@ Container start in progress...
 \end{itemize}
 
 Для установки сервера OpenVPN, можно обратиться к официальной документации, расположенной по адресу: \url{http://openvpn.net/index.php/open-source/documentation.html}
+
+Для того, чтобы в контейнере могли использоваться собственные правила IPTables, необходимо убедиться что в файле \texttt{/etc/vz/vz.conf} присутствует строка:
+\begin{lstlisting}
+IPTABLES="ipt_owner ipt_REDIRECT ipt_recent ip_tables iptable_filter iptable_mangle ipt_limit ipt_multiport ipt_tos ipt_TOS ipt_REJECT ipt_TCPMSS ipt_tcpmss ipt_ttl ipt_LOG ipt_length ip_conntrack ip_conntrack_ftp ipt_state iptable_nat ip_nat_ftp"
+\end{lstlisting}
+
+Если же строки нет, то ее надо добавить и перезагрузить контейнер для применения настроек:
+\begin{lstlisting}
+# vim /etc/vz/vz.conf
+\end{lstlisting}
+\begin{lstlisting}
+# vzctl restart 101
+\end{lstlisting}
 
 \clearpage
