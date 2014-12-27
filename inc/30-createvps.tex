@@ -201,13 +201,7 @@ CT configuration saved to /etc/vz/conf/101.conf
 \begin{lstlisting}
 # vzctl set 101 --userpasswd root:p@ssw0rd
 Starting container...
-Opening delta /vz/private/101/root.hdd/root.hdd
-Adding delta dev=/dev/ploop37965 img=/vz/private/101/root.hdd/root.hdd (rw)
-Mounting /dev/ploop37965p1 at /vz/root/101 fstype=ext4 data='balloon_ino=12,' 
-Container is mounted
-Container start in progress...
-Killing container ...
-Container was stopped
+...
 Unmounting file system at /vz/root/101
 Unmounting device /dev/ploop37965
 Container is unmounted
@@ -300,13 +294,13 @@ CTID 101 exist mounted running
     \item \texttt{HOSTNAME} "--- имя контейнера.
 \end{itemize}
 
-\subsection{Остановка, перезапуск и удаление контейнера}
+\subsection{Остановка и перезапуск контейнера}
 Для остановки контейнера используется команда:
 \begin{lstlisting}
 # vzctl stop 101
 \end{lstlisting}
 
-Для полной остановки контейнера, системе требуется немного времени (примерно 2 минуты).
+Для полной остановки контейнера, системе требуется немного времени.
 
 Иногда нужно выключить VPS как можно быстрее, например, если контейнер был подвержен взлому.
 Для того чтобы срочно выключить VPS, нужно использовать ключ \texttt{-{}-fast}:
@@ -325,20 +319,13 @@ Container is unmounted
 Restarting container
 Stopping container ...
 Container was stopped
-Unmounting file system at /vz/root/101
-Unmounting device /dev/ploop37965
-Container is unmounted
-Starting container...
-Opening delta /vz/private/101/root.hdd/root.hdd
-Adding delta dev=/dev/ploop37965 img=/vz/private/101/root.hdd/root.hdd (rw)
-Mounting /dev/ploop37965p1 at /vz/root/101 fstype=ext4 data='balloon_ino=12,' 
-Container is mounted
-Adding IP address(es): 192.168.0.101
-Setting CPU units: 1000
+...
 Container start in progress...
 \end{lstlisting}
 
-А для того чтобы удалить контейнер, его нужно сначала остановить:
+\subsection{Удаление контейнера}
+
+Для того чтобы удалить контейнер, его нужно сначала остановить:
 \begin{lstlisting}
 # vzctl stop 101
 Stopping container ...
@@ -356,7 +343,7 @@ CTID 101 deleted unmounted down
 
 Команда выполняет удаление частной области сервера и переименовывает файл конфигурации, дописывая к нему \texttt{.destroyed}\footnote{Например, после удаления контейнера с CTID = 101, конфиг стал называться \texttt{/etc/vz/conf/101.conf.destroyed}}.
 
-\subsection{Запуск команд}
+\subsection{Запуск команд с хост ноды в контейнере}
 Как уже было сказано выше, для запуска команд в контейнере используется команда:
 \begin{lstlisting}
 # vzctl exec 101 command
