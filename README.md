@@ -45,9 +45,9 @@ openvz-tutorial
 
 Работа с LaTeX
 --------------
-Для работы с LaTeX рекомендую использовать PDFLaTeX и IDE [LaTeXila].
+Для работы с LaTeX рекомендую использовать PDFLaTeX и IDE [LaTeXila](https://wiki.gnome.org/Apps/LaTeXila).
 
-Шаблон документа взят [отсюда].
+Шаблон документа взят [отсюда](https://github.com/Amet13/Russian-Phd-LaTeX-Dissertation-Template/tree/master/Draft).
 
 Ссылки, которые могут пригодиться для настройки LaTeX:
 * Установка LaTeX: http://blog.amet13.name/2014/06/latex.html
@@ -56,13 +56,10 @@ openvz-tutorial
 
 Лицензия
 --------
-[The GNU General Public License, Version 2, June 1991 (GPLv2)]
+[Attribution 4.0 International (CC BY 4.0)](http://creativecommons.org/licenses/by/4.0/)
+
+![CC BY](https://licensebuttons.net/l/by/4.0/88x31.png)
 
 Благодарности
 -------------
-[Павлу Одинцову]
-
-[Павлу Одинцову]:https://github.com/pavel-odintsov
-[LaTeXila]:https://wiki.gnome.org/Apps/LaTeXila
-[отсюда]:https://github.com/Amet13/Russian-Phd-LaTeX-Dissertation-Template/tree/master/Draft
-[The GNU General Public License, Version 2, June 1991 (GPLv2)]:https://github.com/Amet13/openvz-tutorial/blob/master/LICENSE
+[Павлу Одинцову](https://github.com/pavel-odintsov)
