@@ -54,6 +54,17 @@ openvz-tutorial
 * Использование пакета listings для оформления исходного кода: http://blog.amet13.name/2014/10/latex.html
 * Установка PSCyr для красивых шрифтов в PDFLaTeX: http://blog.amet13.name/2014/10/pscyr.html
 
+Для пользователей GNU/Linux можно воспользоваться Makefile.
+Пример компиляции проекта:
+```bash
+cd openvz-tutorial/
+make
+```
+Пример очистки ненужных файлов после компиляции:
+```bash
+make clean
+```
+
 Лицензия
 --------
 [Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](http://creativecommons.org/licenses/by-sa/4.0/deed.ru)
