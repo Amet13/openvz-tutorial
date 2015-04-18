@@ -1,4 +1,4 @@
-\section{VPN и IPTables в контейнере}
+\section{Проброс устройств. VPN и IPTables}
 
 Технология VPN\footnote{VPN (англ. Virtual Private Network) "--- обобщенное название технологий, позволяющих обеспечить одно или несколько сетевых соединений поверх другой сети (например, Интернет)} позволяет устанавливать безопасное сетевое соединение между компьютерами.
 Для того чтобы VPN работала в контейнере, необходимо разрешить использование TUN/TAP устройств для контейнера.
@@ -73,6 +73,53 @@ IPTABLES="ipt_owner ipt_REDIRECT ipt_recent ip_tables iptable_filter iptable_man
 \end{lstlisting}
 \begin{lstlisting}
 # vzctl restart 101
+\end{lstlisting}
+
+FUSE (Filesystem in Userspace) "--- модуль Linux-ядра, позволяющий создавать виртуальные файловые системы.
+FUSE может пригодится, например при монтировании Яндекс.Диска или других виртуальных файловых систем.
+
+Для того, чтобы для контейнеров был доступен FUSE, его необходимо включить на хост-ноде:
+\begin{lstlisting}
+# modprobe fuse
+\end{lstlisting}
+
+Проверить, что модуль успешно подключен:
+\begin{lstlisting}
+# lsmod | grep fuse
+fuse  92980  54
+\end{lstlisting}
+
+Также необходимо добавить автозагрузку модуля при перезапуске хост-ноды:
+\begin{lstlisting}
+# vim /etc/rc.local
+#!/bin/sh
+...
+modprobe fuse
+\end{lstlisting}
+
+Проброс FUSE для контейнера 101:
+\begin{lstlisting}
+# vzctl stop 101
+# vzctl set 101 --devnodes fuse:rw --save
+# vzctl set 101 --devices c:10:229:rw --save
+# vzctl start 101
+\end{lstlisting}
+
+В контейнере проверяем, пробросилось ли устройство:
+\begin{lstlisting}
+[root@101 /]# ls /dev/fuse
+/dev/fuse
+\end{lstlisting}
+
+Пример подключения Яндекс.Диска:
+\begin{lstlisting}
+# mount -t davfs https://webdav.yandex.ru /mnt/yandex.disk/
+Please enter the username to authenticate with server
+https://webdav.yandex.ru or hit enter for none.
+  Username: username
+Please enter the password to authenticate user username with server
+https://webdav.yandex.ru or hit enter for none.
+  Password:  pass
 \end{lstlisting}
 
 \clearpage
