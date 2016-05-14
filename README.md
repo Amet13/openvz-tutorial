@@ -2,6 +2,9 @@ openvz-tutorial
 ===============
 Руководство по созданию и управлению контейнерами на базе OpenVZ [[PDF](https://github.com/Amet13/openvz-tutorial/raw/master/main.pdf)]
 
+В 2016 году анонсирована бета-версия Virtuozzo 7, базирущейся на ядре 3.10.
+Поэтому данное руководство после многих изменений и дополнений перекочевало сюда: https://github.com/Amet13/virtuozzo-tutorial
+
 Краткое содержание
 ------------------
 1. Введение в виртуализацию
@@ -58,6 +61,7 @@ openvz-tutorial
 Для пользователей GNU/Linux можно воспользоваться Makefile.
 Пример компиляции проекта:
 ```bash
+git clone https://github.com/Amet13/openvz-tutorial.git
 cd openvz-tutorial/
 make
 ```
