@@ -2,8 +2,8 @@ openvz-tutorial
 ===============
 Руководство по созданию и управлению контейнерами на базе OpenVZ [[PDF](https://github.com/Amet13/openvz-tutorial/raw/master/main.pdf)]
 
-В 2016 году анонсирована бета-версия Virtuozzo 7, базирущейся на ядре 3.10.
-Поэтому данное руководство после многих изменений и дополнений перекочевало сюда: https://github.com/Amet13/virtuozzo-tutorial
+В 2016 году [анонсирован](https://lists.openvz.org/pipermail/announce/2016-July/000664.html) выход новой версии OpenVZ 7, базирущейся на ядре 3.10.
+Поэтому данное руководство после многих изменений и дополнений перекочевало сюда: https://github.com/Amet13/vz-tutorial
 
 Краткое содержание
 ------------------
@@ -16,7 +16,7 @@ openvz-tutorial
 7. ploop
 8. Управление VPS через Web-браузер
 9. Рекомендации по работе с системой
-10. Virtuozzo 7
+10. OpenVZ 7
 * Список литературы
 * A Установка CentOS 6
 * B О чем еще не рассказано?
@@ -49,9 +49,7 @@ openvz-tutorial
 
 Работа с LaTeX
 --------------
-Для работы с LaTeX рекомендую использовать PDFLaTeX и IDE [LaTeXila](https://wiki.gnome.org/Apps/LaTeXila).
-
-Шаблон документа взят [отсюда](https://github.com/Amet13/Russian-Phd-LaTeX-Dissertation-Template/tree/master/Draft).
+Для работы с LaTeX рекомендую использовать PDFLaTeX и [Atom](https://atom.io/) с плагином [language-latex](https://atom.io/packages/language-latex).
 
 Ссылки, которые могут пригодиться для настройки LaTeX:
 * Установка LaTeX: http://blog.amet13.name/2014/06/latex.html
