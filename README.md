@@ -49,21 +49,19 @@ openvz-tutorial
 
 Работа с LaTeX
 --------------
-Для работы с LaTeX рекомендую использовать PDFLaTeX и [Atom](https://atom.io/) с плагином [language-latex](https://atom.io/packages/language-latex).
-
 Ссылки, которые могут пригодиться для настройки LaTeX:
 * Установка LaTeX: http://blog.amet13.name/2014/06/latex.html
 * Использование пакета listings для оформления исходного кода: http://blog.amet13.name/2014/10/latex.html
 * Установка PSCyr для красивых шрифтов в PDFLaTeX: http://blog.amet13.name/2014/10/pscyr.html
 
-Для пользователей GNU/Linux можно воспользоваться Makefile.
-Пример компиляции проекта:
+Пример компиляции проекта с помощью Makefile:
 ```bash
 git clone https://github.com/Amet13/openvz-tutorial.git
 cd openvz-tutorial/
 make
 ```
-Пример очистки ненужных файлов после компиляции:
+
+Пример очистки сборочных файлов после компиляции (кроме PDF):
 ```bash
 make clean
 ```
